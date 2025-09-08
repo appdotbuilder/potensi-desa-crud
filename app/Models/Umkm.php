@@ -14,23 +14,34 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $desa_id
  * @property string $nama_usaha
  * @property string $jenis_usaha
- * @property string $pemilik
- * @property string|null $alamat
  * @property int $jumlah_pekerja
- * @property float|null $omset_tahunan
- * @property string|null $produk_utama
- * @property string $status
- * @property string|null $keterangan
+ * @property string $omset_tahunan
+ * @property string|null $alamat
+ * @property string $pemilik
+ * @property string|null $kontak
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * 
- * @property-read Desa $desa
+ * @property-read \App\Models\Desa $desa
  * 
  * @method static \Illuminate\Database\Eloquent\Builder|Umkm newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Umkm newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Umkm query()
- * @method static \Illuminate\Database\Eloquent\Builder|Umkm active()
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereAlamat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereDesaId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereJenisUsaha($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereJumlahPekerja($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereKontak($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereNamaUsaha($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereOmsetTahunan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm wherePemilik($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Umkm withoutTrashed()
  * @method static \Database\Factories\UmkmFactory factory($count = null, $state = [])
  * 
  * @mixin \Eloquent
@@ -48,13 +59,11 @@ class Umkm extends Model
         'desa_id',
         'nama_usaha',
         'jenis_usaha',
-        'pemilik',
-        'alamat',
         'jumlah_pekerja',
         'omset_tahunan',
-        'produk_utama',
-        'status',
-        'keterangan',
+        'alamat',
+        'pemilik',
+        'kontak',
     ];
 
     /**
@@ -63,8 +72,9 @@ class Umkm extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'omset_tahunan' => 'decimal:2',
+        'desa_id' => 'integer',
         'jumlah_pekerja' => 'integer',
+        'omset_tahunan' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -76,16 +86,5 @@ class Umkm extends Model
     public function desa(): BelongsTo
     {
         return $this->belongsTo(Desa::class);
-    }
-
-    /**
-     * Scope a query to only include active umkms.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('status', 'aktif');
     }
 }

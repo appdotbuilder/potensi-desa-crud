@@ -3,137 +3,123 @@
 namespace App\Http\Controllers;
 
 use App\Models\Desa;
+use App\Models\Kabupaten;
+use App\Models\Kecamatan;
 use App\Models\User;
-use App\Models\Demografi;
-use App\Models\Umkm;
-use App\Models\FasilitasUmum;
-use App\Models\Pendidikan;
-use App\Models\Kesehatan;
-use App\Models\PariwisataBudaya;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
     /**
-     * Display the dashboard.
+     * Display the dashboard based on user role.
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-        
-        if ($user->isSuperAdmin()) {
-            return $this->superAdminDashboard();
-        } elseif ($user->hasRole('admin_kabupaten')) {
-            return $this->adminKabupatenDashboard($user);
-        } elseif ($user->hasRole('admin_kecamatan')) {
-            return $this->adminKecamatanDashboard($user);
-        } elseif ($user->hasRole('admin_desa')) {
-            return $this->adminDesaDashboard($user);
-        }
+        $user = Auth::user();
+        $userRole = $user->getFirstRoleName();
 
-        return Inertia::render('dashboard', [
-            'stats' => []
-        ]);
+        switch ($userRole) {
+            case 'super_admin':
+                return $this->superAdminDashboard();
+            
+            case 'admin_desa':
+                return $this->adminDesaDashboard($user);
+            
+            case 'admin_kecamatan':
+                return $this->adminKecamatanDashboard($user);
+            
+            case 'admin_kabupaten':
+                return $this->adminKabupatenDashboard($user);
+            
+            default:
+                return Inertia::render('dashboard', [
+                    'stats' => [],
+                    'userRole' => $userRole,
+                ]);
+        }
     }
 
     /**
-     * Super admin dashboard with overall statistics.
+     * Display Super Admin dashboard with overall statistics.
      */
     protected function superAdminDashboard()
     {
         $stats = [
-            'total_users' => User::count(),
+            'total_kabupaten' => Kabupaten::count(),
+            'total_kecamatan' => Kecamatan::count(),
             'total_desa' => Desa::count(),
-            'total_umkm' => Umkm::count(),
-            'total_penduduk' => Demografi::sum('total_penduduk'),
-            'recent_users' => User::with(['role', 'desa'])->latest()->limit(5)->get(),
-            'desa_stats' => Desa::with(['kecamatan', 'kabupaten'])
-                ->withCount(['umkms', 'demografis', 'fasilitasUmums'])
+            'total_users' => User::count(),
+            'recent_desas' => Desa::with(['kabupaten', 'kecamatan'])
                 ->latest()
-                ->limit(10)
+                ->take(5)
                 ->get(),
         ];
 
         return Inertia::render('dashboard', [
             'stats' => $stats,
-            'role_type' => 'super_admin'
+            'userRole' => 'super_admin',
         ]);
     }
 
     /**
-     * Admin kabupaten dashboard.
-     */
-    protected function adminKabupatenDashboard(User $user)
-    {
-        $desaQuery = Desa::where('kabupaten_id', $user->kabupaten_id);
-        
-        $stats = [
-            'total_desa' => $desaQuery->count(),
-            'total_umkm' => Umkm::whereIn('desa_id', $desaQuery->pluck('id'))->count(),
-            'total_penduduk' => Demografi::whereIn('desa_id', $desaQuery->pluck('id'))->sum('total_penduduk'),
-            'desa_list' => $desaQuery->with(['kecamatan'])
-                ->withCount(['umkms', 'demografis'])
-                ->get(),
-        ];
-
-        return Inertia::render('dashboard', [
-            'stats' => $stats,
-            'role_type' => 'admin_kabupaten'
-        ]);
-    }
-
-    /**
-     * Admin kecamatan dashboard.
-     */
-    protected function adminKecamatanDashboard(User $user)
-    {
-        $desaQuery = Desa::where('kecamatan_id', $user->kecamatan_id);
-        
-        $stats = [
-            'total_desa' => $desaQuery->count(),
-            'total_umkm' => Umkm::whereIn('desa_id', $desaQuery->pluck('id'))->count(),
-            'total_penduduk' => Demografi::whereIn('desa_id', $desaQuery->pluck('id'))->sum('total_penduduk'),
-            'desa_list' => $desaQuery->withCount(['umkms', 'demografis'])->get(),
-        ];
-
-        return Inertia::render('dashboard', [
-            'stats' => $stats,
-            'role_type' => 'admin_kecamatan'
-        ]);
-    }
-
-    /**
-     * Admin desa dashboard.
+     * Display Admin Desa dashboard with village-specific data.
      */
     protected function adminDesaDashboard(User $user)
     {
-        $desa = $user->desa;
-        
-        if (!$desa) {
+        if (!$user->desa_id) {
             return Inertia::render('dashboard', [
-                'stats' => [],
-                'error' => 'Desa tidak ditemukan'
+                'error' => 'No village assigned to this user.',
+                'userRole' => 'admin_desa',
             ]);
         }
 
+        $desa = Desa::with(['kabupaten', 'kecamatan'])->find($user->desa_id);
+        
+        // Count related data
+        $totalDemografi = \DB::table('demografis')->where('desa_id', $user->desa_id)->whereNull('deleted_at')->count();
+        $totalUmkm = \DB::table('umkms')->where('desa_id', $user->desa_id)->whereNull('deleted_at')->count();
+        
         $stats = [
-            'desa_name' => $desa->nama_desa,
-            'total_umkm' => $desa->umkms()->count(),
-            'total_penduduk' => $desa->demografis()->sum('total_penduduk'),
-            'total_fasilitas' => $desa->fasilitasUmums()->count(),
-            'total_sekolah' => $desa->pendidikans()->count(),
-            'total_kesehatan' => $desa->kesehatans()->count(),
-            'total_pariwisata' => $desa->pariwisataBudayas()->count(),
-            'recent_data' => [
-                'umkm' => $desa->umkms()->latest()->limit(5)->get(),
-                'pariwisata' => $desa->pariwisataBudayas()->latest()->limit(3)->get(),
-            ],
+            'desa' => $desa,
+            'total_demografi' => $totalDemografi,
+            'total_umkm' => $totalUmkm,
         ];
 
         return Inertia::render('dashboard', [
             'stats' => $stats,
-            'role_type' => 'admin_desa'
+            'userRole' => 'admin_desa',
+        ]);
+    }
+
+    /**
+     * Display Admin Kecamatan dashboard with district summary.
+     */
+    protected function adminKecamatanDashboard(User $user)
+    {
+        $stats = [
+            'message' => 'Kecamatan dashboard - view summaries of villages in your district',
+        ];
+
+        return Inertia::render('dashboard', [
+            'stats' => $stats,
+            'userRole' => 'admin_kecamatan',
+        ]);
+    }
+
+    /**
+     * Display Admin Kabupaten dashboard with regency overview.
+     */
+    protected function adminKabupatenDashboard(User $user)
+    {
+        $stats = [
+            'message' => 'Kabupaten dashboard - view all districts and villages overview',
+        ];
+
+        return Inertia::render('dashboard', [
+            'stats' => $stats,
+            'userRole' => 'admin_kabupaten',
         ]);
     }
 }

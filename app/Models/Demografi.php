@@ -15,37 +15,37 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $total_penduduk
  * @property int $laki_laki
  * @property int $perempuan
- * @property int $usia_0_14
- * @property int $usia_15_64
- * @property int $usia_65_plus
- * @property string|null $agama_mayoritas
- * @property int $islam
- * @property int $kristen
- * @property int $katolik
- * @property int $hindu
- * @property int $buddha
- * @property int $konghucu
- * @property int $tidak_sekolah
- * @property int $sd
- * @property int $smp
- * @property int $sma
- * @property int $diploma
- * @property int $sarjana
- * @property int $petani
- * @property int $pedagang
- * @property int $pns
- * @property int $swasta
- * @property int $tidak_bekerja
- * @property int $tahun_data
+ * @property int $usia_0_2
+ * @property int $usia_0_5
+ * @property int $usia_17_plus
+ * @property string $agama
+ * @property string $pendidikan_terakhir
+ * @property string $pekerjaan
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * 
- * @property-read Desa $desa
+ * @property-read \App\Models\Desa $desa
  * 
  * @method static \Illuminate\Database\Eloquent\Builder|Demografi newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Demografi newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Demografi query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereAgama($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereDesaId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereLakiLaki($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi wherePekerjaan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi wherePendidikanTerakhir($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi wherePerempuan($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereTotalPenduduk($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereUsia02($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereUsia05($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereUsia17Plus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Demografi withoutTrashed()
  * @method static \Database\Factories\DemografiFactory factory($count = null, $state = [])
  * 
  * @mixin \Eloquent
@@ -64,28 +64,12 @@ class Demografi extends Model
         'total_penduduk',
         'laki_laki',
         'perempuan',
-        'usia_0_14',
-        'usia_15_64',
-        'usia_65_plus',
-        'agama_mayoritas',
-        'islam',
-        'kristen',
-        'katolik',
-        'hindu',
-        'buddha',
-        'konghucu',
-        'tidak_sekolah',
-        'sd',
-        'smp',
-        'sma',
-        'diploma',
-        'sarjana',
-        'petani',
-        'pedagang',
-        'pns',
-        'swasta',
-        'tidak_bekerja',
-        'tahun_data',
+        'usia_0_2',
+        'usia_0_5',
+        'usia_17_plus',
+        'agama',
+        'pendidikan_terakhir',
+        'pekerjaan',
     ];
 
     /**
@@ -94,7 +78,13 @@ class Demografi extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tahun_data' => 'integer',
+        'desa_id' => 'integer',
+        'total_penduduk' => 'integer',
+        'laki_laki' => 'integer',
+        'perempuan' => 'integer',
+        'usia_0_2' => 'integer',
+        'usia_0_5' => 'integer',
+        'usia_17_plus' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

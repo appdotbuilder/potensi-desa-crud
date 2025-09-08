@@ -12,31 +12,37 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * App\Models\Desa
  *
  * @property int $id
- * @property int $kabupaten_id
- * @property int $kecamatan_id
  * @property string $nama_desa
+ * @property int $kecamatan_id
+ * @property int $kabupaten_id
  * @property string|null $alamat
  * @property string|null $kode_pos
- * @property string|null $telepon
- * @property string|null $nama_kepala_desa
- * @property float|null $luas_wilayah
- * @property int|null $jumlah_penduduk
+ * @property string $kepala_desa
+ * @property string $luas_wilayah_total
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * 
- * @property-read Kabupaten $kabupaten
- * @property-read Kecamatan $kecamatan
- * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $users
- * @property-read int|null $users_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Demografi> $demografis
- * @property-read int|null $demografis_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Umkm> $umkms
- * @property-read int|null $umkms_count
+ * @property-read \App\Models\Kecamatan $kecamatan
+ * @property-read \App\Models\Kabupaten $kabupaten
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
  * 
  * @method static \Illuminate\Database\Eloquent\Builder|Desa newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Desa newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Desa query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereAlamat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereKabupatenId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereKecamatanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereKepalaDesaDesaId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereKodePos($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereLuasWilayahTotal($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereNamaDesa($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa withTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder|Desa withoutTrashed()
  * @method static \Database\Factories\DesaFactory factory($count = null, $state = [])
  * 
  * @mixin \Eloquent
@@ -51,15 +57,13 @@ class Desa extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'kabupaten_id',
-        'kecamatan_id',
         'nama_desa',
+        'kecamatan_id',
+        'kabupaten_id',
         'alamat',
         'kode_pos',
-        'telepon',
-        'nama_kepala_desa',
-        'luas_wilayah',
-        'jumlah_penduduk',
+        'kepala_desa',
+        'luas_wilayah_total',
     ];
 
     /**
@@ -68,20 +72,13 @@ class Desa extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'luas_wilayah' => 'decimal:2',
-        'jumlah_penduduk' => 'integer',
+        'kecamatan_id' => 'integer',
+        'kabupaten_id' => 'integer',
+        'luas_wilayah_total' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
-
-    /**
-     * Get the kabupaten that owns the desa.
-     */
-    public function kabupaten(): BelongsTo
-    {
-        return $this->belongsTo(Kabupaten::class);
-    }
 
     /**
      * Get the kecamatan that owns the desa.
@@ -92,58 +89,18 @@ class Desa extends Model
     }
 
     /**
+     * Get the kabupaten that owns the desa.
+     */
+    public function kabupaten(): BelongsTo
+    {
+        return $this->belongsTo(Kabupaten::class);
+    }
+
+    /**
      * Get the users for the desa.
      */
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
-    }
-
-    /**
-     * Get the demografis for the desa.
-     */
-    public function demografis(): HasMany
-    {
-        return $this->hasMany(Demografi::class);
-    }
-
-    /**
-     * Get the umkms for the desa.
-     */
-    public function umkms(): HasMany
-    {
-        return $this->hasMany(Umkm::class);
-    }
-
-    /**
-     * Get the fasilitas umums for the desa.
-     */
-    public function fasilitasUmums(): HasMany
-    {
-        return $this->hasMany(FasilitasUmum::class);
-    }
-
-    /**
-     * Get the pendidikans for the desa.
-     */
-    public function pendidikans(): HasMany
-    {
-        return $this->hasMany(Pendidikan::class);
-    }
-
-    /**
-     * Get the kesehatans for the desa.
-     */
-    public function kesehatans(): HasMany
-    {
-        return $this->hasMany(Kesehatan::class);
-    }
-
-    /**
-     * Get the pariwisata budayas for the desa.
-     */
-    public function pariwisataBudayas(): HasMany
-    {
-        return $this->hasMany(PariwisataBudaya::class);
     }
 }

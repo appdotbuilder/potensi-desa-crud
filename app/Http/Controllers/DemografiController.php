@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateDemografiRequest;
 use App\Models\Demografi;
 use App\Models\Desa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class DemografiController extends Controller
@@ -16,44 +17,51 @@ class DemografiController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-        
-        $query = Demografi::with(['desa.kecamatan.kabupaten']);
-        
-        // Apply role-based filtering
-        if ($user->hasRole('admin_desa')) {
+        $user = Auth::user();
+        $query = Demografi::with('desa.kecamatan.kabupaten');
+
+        // Filter based on user role
+        if ($user->hasRole('admin_desa') && $user->desa_id) {
             $query->where('desa_id', $user->desa_id);
         } elseif ($user->hasRole('admin_kecamatan')) {
-            $query->whereHas('desa', fn($q) => $q->where('kecamatan_id', $user->kecamatan_id));
-        } elseif ($user->hasRole('admin_kabupaten')) {
-            $query->whereHas('desa', fn($q) => $q->where('kabupaten_id', $user->kabupaten_id));
+            // Filter by kecamatan - this would require additional logic
+            // For now, show all
         }
-        
-        $demografis = $query->latest()->paginate(15);
-        
-        return Inertia::render('demografis/index', [
+
+        $demografis = $query->when($request->search, function ($query, $search) {
+            return $query->whereHas('desa', function ($q) use ($search) {
+                $q->where('nama_desa', 'like', "%{$search}%");
+            });
+        })
+        ->latest()
+        ->paginate(10);
+
+        return Inertia::render('demografi/index', [
             'demografis' => $demografis,
-            'can_create' => $user->hasRole('admin_desa') || $user->isSuperAdmin(),
+            'filters' => $request->only(['search']),
+            'userRole' => $user->getFirstRoleName(),
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
+    public function create()
     {
-        $user = $request->user();
-        
-        if (!$user->hasRole('admin_desa') && !$user->isSuperAdmin()) {
-            abort(403, 'Unauthorized action.');
+        $user = Auth::user();
+        $desas = collect();
+
+        if ($user->hasRole('super_admin')) {
+            $desas = Desa::with(['kecamatan', 'kabupaten'])->get();
+        } elseif ($user->hasRole('admin_desa') && $user->desa_id) {
+            $desas = Desa::where('id', $user->desa_id)->with(['kecamatan', 'kabupaten'])->get();
         }
-        
-        $desaOptions = $user->isSuperAdmin() 
-            ? Desa::with(['kecamatan', 'kabupaten'])->get()
-            : Desa::where('id', $user->desa_id)->with(['kecamatan', 'kabupaten'])->get();
-        
-        return Inertia::render('demografis/create', [
-            'desa_options' => $desaOptions,
+
+        return Inertia::render('demografi/create', [
+            'desas' => $desas,
+            'agamaOptions' => ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'],
+            'pendidikanOptions' => ['Tidak Sekolah', 'SD', 'SMP', 'SMA', 'Diploma', 'Sarjana', 'Pascasarjana'],
+            'pekerjaanOptions' => ['Petani', 'Pedagang', 'PNS', 'Swasta', 'Nelayan', 'Buruh', 'Lainnya'],
         ]);
     }
 
@@ -64,8 +72,8 @@ class DemografiController extends Controller
     {
         $demografi = Demografi::create($request->validated());
 
-        return redirect()->route('demografis.show', $demografi)
-            ->with('success', 'Data demografi berhasil ditambahkan.');
+        return redirect()->route('demografi.index')
+            ->with('success', 'Data demografi created successfully.');
     }
 
     /**
@@ -73,9 +81,9 @@ class DemografiController extends Controller
      */
     public function show(Demografi $demografi)
     {
-        $demografi->load(['desa.kecamatan.kabupaten']);
-        
-        return Inertia::render('demografis/show', [
+        $demografi->load('desa.kecamatan.kabupaten');
+
+        return Inertia::render('demografi/show', [
             'demografi' => $demografi,
         ]);
     }
@@ -83,24 +91,25 @@ class DemografiController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Request $request, Demografi $demografi)
+    public function edit(Demografi $demografi)
     {
-        $user = $request->user();
-        
-        // Check permission
-        if ($user->hasRole('admin_desa') && $demografi->desa_id !== $user->desa_id) {
-            abort(403, 'Unauthorized action.');
+        $user = Auth::user();
+        $desas = collect();
+
+        if ($user->hasRole('super_admin')) {
+            $desas = Desa::with(['kecamatan', 'kabupaten'])->get();
+        } elseif ($user->hasRole('admin_desa') && $user->desa_id) {
+            $desas = Desa::where('id', $user->desa_id)->with(['kecamatan', 'kabupaten'])->get();
         }
-        
-        $demografi->load(['desa.kecamatan.kabupaten']);
-        
-        $desaOptions = $user->isSuperAdmin() 
-            ? Desa::with(['kecamatan', 'kabupaten'])->get()
-            : Desa::where('id', $user->desa_id)->with(['kecamatan', 'kabupaten'])->get();
-        
-        return Inertia::render('demografis/edit', [
+
+        $demografi->load('desa');
+
+        return Inertia::render('demografi/edit', [
             'demografi' => $demografi,
-            'desa_options' => $desaOptions,
+            'desas' => $desas,
+            'agamaOptions' => ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'],
+            'pendidikanOptions' => ['Tidak Sekolah', 'SD', 'SMP', 'SMA', 'Diploma', 'Sarjana', 'Pascasarjana'],
+            'pekerjaanOptions' => ['Petani', 'Pedagang', 'PNS', 'Swasta', 'Nelayan', 'Buruh', 'Lainnya'],
         ]);
     }
 
@@ -111,25 +120,18 @@ class DemografiController extends Controller
     {
         $demografi->update($request->validated());
 
-        return redirect()->route('demografis.show', $demografi)
-            ->with('success', 'Data demografi berhasil diperbarui.');
+        return redirect()->route('demografi.index')
+            ->with('success', 'Data demografi updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Demografi $demografi)
+    public function destroy(Demografi $demografi)
     {
-        $user = $request->user();
-        
-        // Check permission
-        if ($user->hasRole('admin_desa') && $demografi->desa_id !== $user->desa_id) {
-            abort(403, 'Unauthorized action.');
-        }
-        
         $demografi->delete();
 
-        return redirect()->route('demografis.index')
-            ->with('success', 'Data demografi berhasil dihapus.');
+        return redirect()->route('demografi.index')
+            ->with('success', 'Data demografi deleted successfully.');
     }
 }

@@ -11,7 +11,7 @@ class StoreDemografiRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasRole('admin_desa') || $this->user()->isSuperAdmin();
+        return auth()->user()->hasAnyRole(['super_admin', 'admin_desa']);
     }
 
     /**
@@ -26,28 +26,12 @@ class StoreDemografiRequest extends FormRequest
             'total_penduduk' => 'required|integer|min:0',
             'laki_laki' => 'required|integer|min:0',
             'perempuan' => 'required|integer|min:0',
-            'usia_0_14' => 'required|integer|min:0',
-            'usia_15_64' => 'required|integer|min:0',
-            'usia_65_plus' => 'required|integer|min:0',
-            'agama_mayoritas' => 'nullable|in:islam,kristen,katolik,hindu,buddha,konghucu',
-            'islam' => 'required|integer|min:0',
-            'kristen' => 'required|integer|min:0',
-            'katolik' => 'required|integer|min:0',
-            'hindu' => 'required|integer|min:0',
-            'buddha' => 'required|integer|min:0',
-            'konghucu' => 'required|integer|min:0',
-            'tidak_sekolah' => 'required|integer|min:0',
-            'sd' => 'required|integer|min:0',
-            'smp' => 'required|integer|min:0',
-            'sma' => 'required|integer|min:0',
-            'diploma' => 'required|integer|min:0',
-            'sarjana' => 'required|integer|min:0',
-            'petani' => 'required|integer|min:0',
-            'pedagang' => 'required|integer|min:0',
-            'pns' => 'required|integer|min:0',
-            'swasta' => 'required|integer|min:0',
-            'tidak_bekerja' => 'required|integer|min:0',
-            'tahun_data' => 'required|integer|min:2000|max:' . (date('Y') + 1),
+            'usia_0_2' => 'required|integer|min:0',
+            'usia_0_5' => 'required|integer|min:0',
+            'usia_17_plus' => 'required|integer|min:0',
+            'agama' => 'required|in:Islam,Kristen,Katolik,Hindu,Buddha,Konghucu',
+            'pendidikan_terakhir' => 'required|in:Tidak Sekolah,SD,SMP,SMA,Diploma,Sarjana,Pascasarjana',
+            'pekerjaan' => 'required|in:Petani,Pedagang,PNS,Swasta,Nelayan,Buruh,Lainnya',
         ];
     }
 
@@ -59,12 +43,15 @@ class StoreDemografiRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'desa_id.required' => 'Desa harus dipilih.',
-            'desa_id.exists' => 'Desa yang dipilih tidak valid.',
-            'total_penduduk.required' => 'Total penduduk harus diisi.',
-            'total_penduduk.integer' => 'Total penduduk harus berupa angka.',
-            'tahun_data.required' => 'Tahun data harus diisi.',
-            'tahun_data.integer' => 'Tahun data harus berupa angka.',
+            'desa_id.required' => 'Desa is required.',
+            'desa_id.exists' => 'Selected desa does not exist.',
+            'total_penduduk.required' => 'Total penduduk is required.',
+            'total_penduduk.integer' => 'Total penduduk must be a number.',
+            'total_penduduk.min' => 'Total penduduk cannot be negative.',
+            'laki_laki.required' => 'Jumlah laki-laki is required.',
+            'perempuan.required' => 'Jumlah perempuan is required.',
+            'agama.required' => 'Agama is required.',
+            'agama.in' => 'Selected agama is invalid.',
         ];
     }
 }
