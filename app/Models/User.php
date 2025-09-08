@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -17,26 +16,26 @@ use Illuminate\Notifications\Notifiable;
  * @property string $email
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string $password
- * @property string|null $remember_token
+ * @property int|null $role_id
  * @property int|null $desa_id
+ * @property int|null $kecamatan_id
+ * @property int|null $kabupaten_id
+ * @property string|null $phone
+ * @property string $status
+ * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Desa|null $desa
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Role> $roles
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * 
+ * @property-read Role|null $role
+ * @property-read Desa|null $desa
+ * @property-read Kecamatan|null $kecamatan
+ * @property-read Kabupaten|null $kabupaten
  * 
  * @method static \Illuminate\Database\Eloquent\Builder|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|User newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|User query()
- * @method static \Illuminate\Database\Eloquent\Builder|User whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereDesaId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereEmailVerifiedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User wherePassword($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereRememberToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|User active()
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * 
  * @mixin \Eloquent
@@ -44,7 +43,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -55,7 +54,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role_id',
         'desa_id',
+        'kecamatan_id',
+        'kabupaten_id',
+        'phone',
+        'status',
     ];
 
     /**
@@ -78,19 +82,22 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'deleted_at' => 'datetime',
         ];
     }
 
     /**
-     * Get the roles that belong to the user.
+     * Get the role that owns the user.
      */
-    public function roles(): BelongsToMany
+    public function role(): BelongsTo
     {
-        return $this->belongsToMany(Role::class, 'user_roles');
+        return $this->belongsTo(Role::class);
     }
 
     /**
-     * Get the desa that the user belongs to.
+     * Get the desa that owns the user.
      */
     public function desa(): BelongsTo
     {
@@ -98,28 +105,60 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user has a specific role.
+     * Get the kecamatan that owns the user.
      */
-    public function hasRole(string $role): bool
+    public function kecamatan(): BelongsTo
     {
-        return $this->roles()->where('name', $role)->exists();
+        return $this->belongsTo(Kecamatan::class);
     }
 
     /**
-     * Check if user has any of the given roles.
+     * Get the kabupaten that owns the user.
      */
-    public function hasAnyRole(array $roles): bool
+    public function kabupaten(): BelongsTo
     {
-        return $this->roles()->whereIn('name', $roles)->exists();
+        return $this->belongsTo(Kabupaten::class);
     }
 
     /**
-     * Get the first role name of the user.
+     * Scope a query to only include active users.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function getFirstRoleName(): ?string
+    public function scopeActive($query)
     {
-        /** @var Role|null $firstRole */
-        $firstRole = $this->roles()->first();
-        return $firstRole?->name;
+        return $query->where('status', 'active');
+    }
+
+    /**
+     * Check if user has specific role.
+     *
+     * @param string $roleName
+     * @return bool
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->role && $this->role->name === $roleName;
+    }
+
+    /**
+     * Check if user is super admin.
+     *
+     * @return bool
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    /**
+     * Check if user is admin desa.
+     *
+     * @return bool
+     */
+    public function isAdminDesa(): bool
+    {
+        return $this->hasRole('admin_desa');
     }
 }

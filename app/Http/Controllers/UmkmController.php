@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreDemografiRequest;
-use App\Http\Requests\UpdateDemografiRequest;
-use App\Models\Demografi;
+use App\Http\Requests\StoreUmkmRequest;
+use App\Http\Requests\UpdateUmkmRequest;
+use App\Models\Umkm;
 use App\Models\Desa;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class DemografiController extends Controller
+class UmkmController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,7 +18,7 @@ class DemografiController extends Controller
     {
         $user = $request->user();
         
-        $query = Demografi::with(['desa.kecamatan.kabupaten']);
+        $query = Umkm::with(['desa.kecamatan.kabupaten']);
         
         // Apply role-based filtering
         if ($user->hasRole('admin_desa')) {
@@ -29,11 +29,27 @@ class DemografiController extends Controller
             $query->whereHas('desa', fn($q) => $q->where('kabupaten_id', $user->kabupaten_id));
         }
         
-        $demografis = $query->latest()->paginate(15);
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_usaha', 'LIKE', "%{$search}%")
+                  ->orWhere('pemilik', 'LIKE', "%{$search}%")
+                  ->orWhere('jenis_usaha', 'LIKE', "%{$search}%");
+            });
+        }
         
-        return Inertia::render('demografis/index', [
-            'demografis' => $demografis,
+        // Apply status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        $umkms = $query->latest()->paginate(15);
+        
+        return Inertia::render('umkms/index', [
+            'umkms' => $umkms,
             'can_create' => $user->hasRole('admin_desa') || $user->isSuperAdmin(),
+            'filters' => $request->only(['search', 'status']),
         ]);
     }
 
@@ -52,7 +68,7 @@ class DemografiController extends Controller
             ? Desa::with(['kecamatan', 'kabupaten'])->get()
             : Desa::where('id', $user->desa_id)->with(['kecamatan', 'kabupaten'])->get();
         
-        return Inertia::render('demografis/create', [
+        return Inertia::render('umkms/create', [
             'desa_options' => $desaOptions,
         ]);
     }
@@ -60,46 +76,46 @@ class DemografiController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreDemografiRequest $request)
+    public function store(StoreUmkmRequest $request)
     {
-        $demografi = Demografi::create($request->validated());
+        $umkm = Umkm::create($request->validated());
 
-        return redirect()->route('demografis.show', $demografi)
-            ->with('success', 'Data demografi berhasil ditambahkan.');
+        return redirect()->route('umkms.show', $umkm)
+            ->with('success', 'Data UMKM berhasil ditambahkan.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Demografi $demografi)
+    public function show(Umkm $umkm)
     {
-        $demografi->load(['desa.kecamatan.kabupaten']);
+        $umkm->load(['desa.kecamatan.kabupaten']);
         
-        return Inertia::render('demografis/show', [
-            'demografi' => $demografi,
+        return Inertia::render('umkms/show', [
+            'umkm' => $umkm,
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Request $request, Demografi $demografi)
+    public function edit(Request $request, Umkm $umkm)
     {
         $user = $request->user();
         
         // Check permission
-        if ($user->hasRole('admin_desa') && $demografi->desa_id !== $user->desa_id) {
+        if ($user->hasRole('admin_desa') && $umkm->desa_id !== $user->desa_id) {
             abort(403, 'Unauthorized action.');
         }
         
-        $demografi->load(['desa.kecamatan.kabupaten']);
+        $umkm->load(['desa.kecamatan.kabupaten']);
         
         $desaOptions = $user->isSuperAdmin() 
             ? Desa::with(['kecamatan', 'kabupaten'])->get()
             : Desa::where('id', $user->desa_id)->with(['kecamatan', 'kabupaten'])->get();
         
-        return Inertia::render('demografis/edit', [
-            'demografi' => $demografi,
+        return Inertia::render('umkms/edit', [
+            'umkm' => $umkm,
             'desa_options' => $desaOptions,
         ]);
     }
@@ -107,29 +123,29 @@ class DemografiController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateDemografiRequest $request, Demografi $demografi)
+    public function update(UpdateUmkmRequest $request, Umkm $umkm)
     {
-        $demografi->update($request->validated());
+        $umkm->update($request->validated());
 
-        return redirect()->route('demografis.show', $demografi)
-            ->with('success', 'Data demografi berhasil diperbarui.');
+        return redirect()->route('umkms.show', $umkm)
+            ->with('success', 'Data UMKM berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Demografi $demografi)
+    public function destroy(Request $request, Umkm $umkm)
     {
         $user = $request->user();
         
         // Check permission
-        if ($user->hasRole('admin_desa') && $demografi->desa_id !== $user->desa_id) {
+        if ($user->hasRole('admin_desa') && $umkm->desa_id !== $user->desa_id) {
             abort(403, 'Unauthorized action.');
         }
         
-        $demografi->delete();
+        $umkm->delete();
 
-        return redirect()->route('demografis.index')
-            ->with('success', 'Data demografi berhasil dihapus.');
+        return redirect()->route('umkms.index')
+            ->with('success', 'Data UMKM berhasil dihapus.');
     }
 }

@@ -12,29 +12,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property int $id
  * @property string $nama_kabupaten
- * @property string $ibukota_kabupaten
- * @property int $jumlah_kecamatan
- * @property string|null $deskripsi
+ * @property string|null $alamat
+ * @property string|null $kode_pos
+ * @property string|null $telepon
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Kecamatan> $kecamatans
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Desa> $desas
+ * 
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Kecamatan> $kecamatans
+ * @property-read int|null $kecamatans_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Desa> $desas
+ * @property-read int|null $desas_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $users
+ * @property-read int|null $users_count
  * 
  * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten query()
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten whereDeskripsi($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten whereIbukotaKabupaten($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten whereJumlahKecamatan($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten whereNamaKabupaten($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten onlyTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten withTrashed()
- * @method static \Illuminate\Database\Eloquent\Builder|Kabupaten withoutTrashed()
  * @method static \Database\Factories\KabupatenFactory factory($count = null, $state = [])
  * 
  * @mixin \Eloquent
@@ -50,9 +44,9 @@ class Kabupaten extends Model
      */
     protected $fillable = [
         'nama_kabupaten',
-        'ibukota_kabupaten',
-        'jumlah_kecamatan',
-        'deskripsi',
+        'alamat',
+        'kode_pos',
+        'telepon',
     ];
 
     /**
@@ -61,7 +55,6 @@ class Kabupaten extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'jumlah_kecamatan' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -81,5 +74,13 @@ class Kabupaten extends Model
     public function desas(): HasMany
     {
         return $this->hasMany(Desa::class);
+    }
+
+    /**
+     * Get the users for the kabupaten.
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
     }
 }

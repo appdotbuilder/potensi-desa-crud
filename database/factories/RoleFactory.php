@@ -17,57 +17,57 @@ class RoleFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->unique()->randomElement(['super_admin', 'admin_kabupaten', 'admin_kecamatan', 'admin_desa']),
-            'display_name' => fake()->words(2, true),
+            'name' => fake()->unique()->randomElement(['super_admin', 'admin_desa', 'admin_kecamatan', 'admin_kabupaten']),
+            'display_name' => fake()->jobTitle(),
             'description' => fake()->sentence(),
         ];
     }
 
     /**
-     * Indicate that the role is super admin.
+     * Super Admin role state.
      */
     public function superAdmin(): static
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'super_admin',
             'display_name' => 'Super Administrator',
-            'description' => 'Full system access and user management',
+            'description' => 'Full access to all features and data management',
         ]);
     }
 
     /**
-     * Indicate that the role is admin kabupaten.
-     */
-    public function adminKabupaten(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'name' => 'admin_kabupaten',
-            'display_name' => 'Admin Kabupaten',
-            'description' => 'Read-only access to all regency data',
-        ]);
-    }
-
-    /**
-     * Indicate that the role is admin kecamatan.
-     */
-    public function adminKecamatan(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'name' => 'admin_kecamatan',
-            'display_name' => 'Admin Kecamatan',
-            'description' => 'Read-only access to district villages data',
-        ]);
-    }
-
-    /**
-     * Indicate that the role is admin desa.
+     * Admin Desa role state.
      */
     public function adminDesa(): static
     {
         return $this->state(fn (array $attributes) => [
             'name' => 'admin_desa',
             'display_name' => 'Admin Desa',
-            'description' => 'Full access to assigned village data',
+            'description' => 'Can manage data for assigned village only',
+        ]);
+    }
+
+    /**
+     * Admin Kecamatan role state.
+     */
+    public function adminKecamatan(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'admin_kecamatan',
+            'display_name' => 'Admin Kecamatan',
+            'description' => 'Can view reports from villages under their district',
+        ]);
+    }
+
+    /**
+     * Admin Kabupaten role state.
+     */
+    public function adminKabupaten(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'admin_kabupaten',
+            'display_name' => 'Admin Kabupaten',
+            'description' => 'Can view all district and village reports',
         ]);
     }
 }

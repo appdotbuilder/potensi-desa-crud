@@ -4,80 +4,88 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Building, Folder, LayoutGrid, MapPin, TrendingUp, Users } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Users, Building2, MapPin, Palmtree, GraduationCap, HeartHandshake } from 'lucide-react';
 import AppLogo from './app-logo';
 
-function getMainNavItems(userRole?: string): NavItem[] {
-    const baseItems: NavItem[] = [
+const getMainNavItems = (userRole: string): NavItem[] => [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
+    ...(userRole === 'admin_desa' || userRole === 'super_admin' ? [
         {
-            title: 'Dashboard',
-            href: '/dashboard',
-            icon: LayoutGrid,
+            title: 'Data Demografi',
+            href: '/demografis',
+            icon: Users,
         },
-    ];
-
-    if (userRole === 'super_admin') {
-        return [
-            ...baseItems,
-            {
-                title: 'Master Data',
-                href: '/kabupaten',
-                icon: Building,
-            },
-            {
-                title: 'Data Demografi',
-                href: '/demografi',
-                icon: Users,
-            },
-        ];
-    }
-
-    if (userRole === 'admin_desa') {
-        return [
-            ...baseItems,
-            {
-                title: 'Data Demografi',
-                href: '/demografi',
-                icon: Users,
-            },
-            {
-                title: 'UMKM & Ekonomi',
-                href: '/umkm',
-                icon: TrendingUp,
-            },
-        ];
-    }
-
-    if (userRole === 'admin_kecamatan' || userRole === 'admin_kabupaten') {
-        return [
-            ...baseItems,
-            {
-                title: 'Laporan Desa',
-                href: '/demografi',
-                icon: MapPin,
-            },
-        ];
-    }
-
-    return baseItems;
-}
+        {
+            title: 'UMKM',
+            href: '/umkms',
+            icon: Building2,
+        },
+        {
+            title: 'Fasilitas Umum',
+            href: '/fasilitas-umums',
+            icon: MapPin,
+        },
+        {
+            title: 'Pendidikan',
+            href: '/pendidikans',
+            icon: GraduationCap,
+        },
+        {
+            title: 'Kesehatan',
+            href: '/kesehatans',
+            icon: HeartHandshake,
+        },
+        {
+            title: 'Pariwisata & Budaya',
+            href: '/pariwisata-budayas',
+            icon: Palmtree,
+        },
+    ] : []),
+    ...(userRole === 'admin_kecamatan' || userRole === 'admin_kabupaten' || userRole === 'super_admin' ? [
+        {
+            title: 'Laporan Demografi',
+            href: '/demografis',
+            icon: Users,
+        },
+        {
+            title: 'Laporan UMKM',
+            href: '/umkms',
+            icon: Building2,
+        },
+    ] : []),
+];
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Tentang Sistem',
-        href: '#',
+        title: 'Panduan',
+        href: '/help',
         icon: BookOpen,
     },
     {
-        title: 'Panduan',
-        href: '#',
+        title: 'Tentang Sistem',
+        href: '/about',
         icon: Folder,
     },
 ];
 
+interface AuthProps {
+    auth: {
+        user?: {
+            role?: {
+                name: string;
+            };
+        };
+    };
+    [key: string]: unknown;
+}
+
 export function AppSidebar() {
-    const { auth } = usePage<{ auth: { user: { roles?: Array<{ name: string }> } } }>().props;
-    const userRole = auth.user.roles?.[0]?.name;
+    const { auth } = usePage<AuthProps>().props;
+    const userRole = auth.user?.role?.name || 'guest';
     const mainNavItems = getMainNavItems(userRole);
 
     return (

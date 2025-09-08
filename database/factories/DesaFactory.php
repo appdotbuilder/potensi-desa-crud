@@ -18,16 +18,16 @@ class DesaFactory extends Factory
      */
     public function definition(): array
     {
-        $kecamatan = Kecamatan::inRandomOrder()->first() ?? Kecamatan::factory()->create();
-        
         return [
-            'nama_desa' => 'Desa ' . fake()->city(),
-            'kecamatan_id' => $kecamatan->id,
-            'kabupaten_id' => $kecamatan->kabupaten_id,
+            'kabupaten_id' => Kabupaten::factory(),
+            'kecamatan_id' => Kecamatan::factory(),
+            'nama_desa' => 'Desa ' . fake()->lastName(),
             'alamat' => fake()->address(),
             'kode_pos' => fake()->postcode(),
-            'kepala_desa' => fake()->name(),
-            'luas_wilayah_total' => fake()->randomFloat(2, 100, 5000),
+            'telepon' => fake()->phoneNumber(),
+            'nama_kepala_desa' => fake()->name(),
+            'luas_wilayah' => fake()->randomFloat(2, 50, 1000),
+            'jumlah_penduduk' => fake()->numberBetween(500, 5000),
         ];
     }
 }

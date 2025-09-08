@@ -8,34 +8,33 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * App\Models\Umkm
+ * App\Models\PariwisataBudaya
  *
  * @property int $id
  * @property int $desa_id
- * @property string $nama_usaha
- * @property string $jenis_usaha
- * @property string $pemilik
- * @property string|null $alamat
- * @property int $jumlah_pekerja
- * @property float|null $omset_tahunan
- * @property string|null $produk_utama
+ * @property string $nama_objek
+ * @property string $jenis
+ * @property string|null $deskripsi
+ * @property string|null $lokasi
+ * @property int|null $pengunjung_tahunan
+ * @property float|null $potensi_pendapatan
+ * @property string|null $foto
  * @property string $status
- * @property string|null $keterangan
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * 
  * @property-read Desa $desa
  * 
- * @method static \Illuminate\Database\Eloquent\Builder|Umkm newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Umkm newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Umkm query()
- * @method static \Illuminate\Database\Eloquent\Builder|Umkm active()
- * @method static \Database\Factories\UmkmFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder|PariwisataBudaya newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PariwisataBudaya newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PariwisataBudaya query()
+ * @method static \Illuminate\Database\Eloquent\Builder|PariwisataBudaya active()
+ * @method static \Database\Factories\PariwisataBudayaFactory factory($count = null, $state = [])
  * 
  * @mixin \Eloquent
  */
-class Umkm extends Model
+class PariwisataBudaya extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -46,15 +45,14 @@ class Umkm extends Model
      */
     protected $fillable = [
         'desa_id',
-        'nama_usaha',
-        'jenis_usaha',
-        'pemilik',
-        'alamat',
-        'jumlah_pekerja',
-        'omset_tahunan',
-        'produk_utama',
+        'nama_objek',
+        'jenis',
+        'deskripsi',
+        'lokasi',
+        'pengunjung_tahunan',
+        'potensi_pendapatan',
+        'foto',
         'status',
-        'keterangan',
     ];
 
     /**
@@ -63,15 +61,15 @@ class Umkm extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'omset_tahunan' => 'decimal:2',
-        'jumlah_pekerja' => 'integer',
+        'pengunjung_tahunan' => 'integer',
+        'potensi_pendapatan' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 
     /**
-     * Get the desa that owns the umkm.
+     * Get the desa that owns the pariwisata budaya.
      */
     public function desa(): BelongsTo
     {
@@ -79,7 +77,7 @@ class Umkm extends Model
     }
 
     /**
-     * Scope a query to only include active umkms.
+     * Scope a query to only include active pariwisata budaya.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder

@@ -18,9 +18,9 @@ class KabupatenFactory extends Factory
     {
         return [
             'nama_kabupaten' => 'Kabupaten ' . fake()->city(),
-            'ibukota_kabupaten' => fake()->city(),
-            'jumlah_kecamatan' => fake()->numberBetween(5, 20),
-            'deskripsi' => fake()->paragraph(),
+            'alamat' => fake()->address(),
+            'kode_pos' => fake()->postcode(),
+            'telepon' => fake()->phoneNumber(),
         ];
     }
 }

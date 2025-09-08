@@ -18,11 +18,11 @@ class KecamatanFactory extends Factory
     public function definition(): array
     {
         return [
-            'nama_kecamatan' => 'Kecamatan ' . fake()->city(),
             'kabupaten_id' => Kabupaten::factory(),
-            'ibukota_kecamatan' => fake()->city(),
-            'jumlah_desa' => fake()->numberBetween(5, 15),
-            'deskripsi' => fake()->paragraph(),
+            'nama_kecamatan' => fake()->streetName(),
+            'alamat' => fake()->address(),
+            'kode_pos' => fake()->postcode(),
+            'telepon' => fake()->phoneNumber(),
         ];
     }
 }
